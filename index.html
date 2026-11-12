@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Register Counter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --board:#e9f1e2; --paper:#fffaf0; --ink:#141414; --muted:#6b6658; --field:#f4ecd8;
+    --red:#d6332b; --blue:#2d6fd2; --green:#1d9a5b; --orange:#f08a24; --purple:#7a45c9; --yellow:#f5c518; --brown:#8a5a3b;
+    --bd:3px solid var(--ink); --sh:5px 5px 0 var(--ink); --sh-sm:3px 3px 0 var(--ink);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;color:var(--ink);font:18px/1.3 "Archivo",system-ui,sans-serif;min-height:100vh;
+    background-color:var(--board);
+    background-image:linear-gradient(rgba(20,20,20,.05) 2px,transparent 2px),linear-gradient(90deg,rgba(20,20,20,.05) 2px,transparent 2px);
+    background-size:44px 44px}
+  .wrap{max-width:560px;margin:0 auto;padding:16px 14px 124px}
+  .display{font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.02em}
+
+  /* header */
+  header{display:flex;align-items:stretch;gap:10px;margin:2px 0 18px}
+  .logo{flex:1;background:var(--paper);border:var(--bd);box-shadow:var(--sh);border-radius:14px;padding:10px 14px;
+    display:flex;align-items:center;gap:10px;transform:rotate(-1.2deg)}
+  .logo .dice{font-size:30px;line-height:1}
+  .logo h1{margin:0;font-size:22px;line-height:1}
+  .logo h1 small{display:block;font-family:"Archivo",system-ui,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;color:var(--red)}
+  .target{background:var(--yellow);border:var(--bd);box-shadow:var(--sh);border-radius:14px;padding:6px 8px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(1.5deg)}
+  .target span{font-size:11px;font-weight:900;letter-spacing:.12em}
+  .target input{width:96px;min-height:46px;font-size:24px;background:var(--paper);border:2.5px solid var(--ink)}
+
+  /* deed cards */
+  .deed{background:var(--paper);border:var(--bd);box-shadow:var(--sh);border-radius:16px;margin-bottom:18px;overflow:hidden}
+  .band{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:var(--bd);color:#fff}
+  .band h2{margin:0;font-size:22px;text-shadow:2px 2px 0 rgba(0,0,0,.35)}
+  .band .tot{font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;font-size:20px;background:var(--paper);color:var(--ink);border:2.5px solid var(--ink);
+    border-radius:10px;padding:4px 12px;font-variant-numeric:tabular-nums}
+  .band.coins{background:var(--blue)} .band.bills{background:var(--green)} .band.res{background:var(--red)}
+  .body{padding:16px}
+
+  input{font:inherit;color:var(--ink);background:var(--field);border:2.5px solid var(--ink);border-radius:12px;
+    padding:8px;width:100%;min-height:60px;font-variant-numeric:tabular-nums;font-size:24px;font-weight:800;text-align:center}
+  input::placeholder{color:var(--muted);font-weight:600;opacity:.5}
+  input:focus{outline:none;background:#fff;box-shadow:0 0 0 3px var(--yellow)}
+  input.auto{background:transparent;border-style:dashed;color:var(--muted);font-weight:700}
+
+  .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .seg button{font:inherit;font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;font-size:20px;min-height:60px;border:var(--bd);border-radius:12px;
+    background:var(--paper);color:var(--ink);cursor:pointer;box-shadow:var(--sh-sm);touch-action:manipulation}
+  .seg button.on{background:var(--yellow);transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+  .tare{position:relative;display:block}
+  .tare .lbl{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:900;letter-spacing:.08em;pointer-events:none}
+  .tare input{min-height:66px;padding-left:52px}
+  .tare .saved{position:absolute;right:8px;top:-12px;background:var(--green);color:#fff;font-size:12px;font-weight:800;
+    padding:2px 8px;border:2px solid var(--ink);border-radius:999px;opacity:0;transition:opacity .3s}
+  .tare .saved.show{opacity:1}
+
+  /* coins */
+  .coin{padding:14px 0;border-top:2.5px dotted rgba(20,20,20,.25)}
+  .coin:first-of-type{border-top:0;padding-top:0}
+  .who{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .who b{font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;font-size:20px;text-transform:uppercase}
+  .who small{margin-left:auto;font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;background:var(--field);
+    border:2px solid var(--ink);border-radius:999px;padding:3px 10px}
+  .chip{flex:0 0 46px;height:46px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;
+    font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;font-size:13px;box-shadow:var(--sh-sm)}
+  .chip.p{background:#e0874f} .chip.n{background:#d9dde3} .chip.d{background:#eef0f3} .chip.q{background:#c7ccd4}
+  .fields{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:8px}
+  .f{display:flex;flex-direction:column;gap:5px}
+  .f span{font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;text-align:center}
+  .link{font-size:13px;font-weight:800;color:var(--muted);text-align:center;margin:6px 0 0}
+
+  /* bills */
+  .bill{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;padding:12px 0;border-top:2.5px dotted rgba(20,20,20,.25)}
+  .bill:first-of-type{border-top:0;padding-top:0}
+  .bleft{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:86px}
+  .note{position:relative;width:84px;height:48px;border:3px solid var(--ink);border-radius:6px;box-shadow:var(--sh-sm);
+    display:grid;place-items:center;font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;font-size:21px;color:var(--ink);
+    background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.25) 0 4px,transparent 4px 8px)}
+  .note::before,.note::after{content:"";position:absolute;width:7px;height:7px;border:1.5px solid var(--ink);border-radius:50%;background:rgba(255,255,255,.6)}
+  .note::before{left:3px;top:3px}.note::after{right:3px;bottom:3px}
+  .n1{background-color:#e7e9ec}.n5{background-color:#ffb37a}.n10{background-color:#7fd3d0}
+  .n20{background-color:#8fd88b}.n50{background-color:#b9a0f0}.n100{background-color:#ff8f86}
+  .bv{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--muted)}
+  .bv.has{color:var(--ink)}
+  .step{display:grid;grid-template-columns:64px 1fr 64px;gap:8px;align-items:center}
+  .step button{height:64px;border:var(--bd);border-radius:14px;background:var(--paper);color:var(--ink);font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;
+    font-size:32px;cursor:pointer;box-shadow:var(--sh-sm);touch-action:manipulation;user-select:none;line-height:1}
+  .step button[data-d="1"]{background:var(--yellow)}
+  .step button:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+  .step input{min-height:64px;font-size:26px}
+
+  /* result */
+  #result{scroll-margin-top:12px}
+  .empty{text-align:center;padding:8px 0;font-weight:800;color:var(--muted)}
+  .status{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+  .badge{width:60px;height:60px;border:var(--bd);border-radius:12px;display:grid;place-items:center;font-size:30px;font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;
+    flex:0 0 60px;box-shadow:var(--sh-sm);animation:roll .5s ease-out}
+  .ok .badge{background:var(--green);color:#fff} .warn .badge{background:var(--orange);color:#fff} .short .badge{background:var(--red);color:#fff}
+  .status h3{margin:0;font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;text-transform:uppercase;font-size:24px;line-height:1.05}
+  .status p{margin:4px 0 0;font-weight:700;color:var(--muted);font-size:15px}
+  .pull{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:10px}
+  .pull li{display:flex;align-items:center;gap:12px;padding:10px 14px;border:var(--bd);border-radius:12px;background:#fff;box-shadow:var(--sh-sm);
+    font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;font-size:24px;font-variant-numeric:tabular-nums;animation:deal .35s ease-out both}
+  .pull li .x{background:var(--yellow);border:2.5px solid var(--ink);border-radius:8px;padding:2px 8px;min-width:56px;text-align:center}
+  .pull li .amt{margin-left:auto;font-family:"Archivo",system-ui,sans-serif;font-weight:800;font-size:17px;color:var(--muted)}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .stat{border:2.5px solid var(--ink);border-radius:12px;padding:10px 6px;text-align:center;background:var(--field)}
+  .stat span{display:block;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+  .stat b{font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;font-size:18px;font-variant-numeric:tabular-nums}
+  .stat.hl{background:var(--yellow)}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+  .btn{font:inherit;font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;text-transform:uppercase;font-size:19px;min-height:64px;border:var(--bd);border-radius:14px;
+    cursor:pointer;box-shadow:var(--sh-sm);background:var(--paper);color:var(--ink);touch-action:manipulation}
+  .btn.primary{background:var(--blue);color:#fff}
+  .btn.danger{background:#fff;color:var(--red)}
+  .btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+  .confetti{position:fixed;inset:0;pointer-events:none;z-index:9}
+  .confetti i{position:absolute;top:-20px;width:14px;height:9px;border:1.5px solid var(--ink);animation:fall 1.6s ease-in forwards}
+
+  /* bottom bar */
+  .bar{position:fixed;left:0;right:0;bottom:0;padding:10px 14px calc(12px + env(safe-area-inset-bottom));z-index:5;transition:transform .25s}
+  .bar.hide{transform:translateY(130%)}
+  .bar button{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:532px;margin:0 auto;min-height:68px;
+    border:var(--bd);border-radius:16px;padding:0 20px;font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;text-transform:uppercase;font-size:21px;color:#fff;cursor:pointer;
+    box-shadow:var(--sh);background:var(--blue)}
+  .bar button.ok{background:var(--green)} .bar button.short{background:var(--red)} .bar button.warn{background:var(--orange)}
+  .bar button:active{transform:translate(4px,4px);box-shadow:1px 1px 0 var(--ink)}
+
+  @keyframes roll{0%{transform:rotate(-200deg) scale(.4)}80%{transform:rotate(15deg) scale(1.1)}100%{transform:none}}
+  @keyframes deal{from{opacity:0;transform:translateX(-14px) rotate(-3deg)}to{opacity:1;transform:none}}
+  @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+  @media (max-width:380px){
+    .logo h1{font-size:21px}.logo .dice{font-size:24px}
+    .target input{width:78px}
+    .step{grid-template-columns:56px 1fr 56px}
+    .bleft{min-width:74px}.note{width:72px}
+    .stat b{font-size:15px}
+    .pull li{font-size:21px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"><div class="dice">🎲</div><h1 class="display">Register Counter<small>CLOSE OUT</small></h1></div>
+    <label class="target"><span>KEEP $</span><input id="target" type="text" inputmode="decimal" value="200"></label>
+  </header>
+
+  <section class="deed">
+    <div class="band coins"><h2 class="display">Coins</h2><span class="tot" id="coinTot">$0.00</span></div>
+    <div class="body">
+      <div class="toolbar">
+        <div class="seg" id="units"><button data-u="g" class="on">g</button><button data-u="oz">oz</button></div>
+        <label class="tare"><span class="lbl">CUP</span><input id="tare" type="text" inputmode="decimal" placeholder="0"><span class="saved" id="saved">SAVED</span></label>
+      </div>
+      <div id="coinRows"></div>
+    </div>
+  </section>
+
+  <section class="deed">
+    <div class="band bills"><h2 class="display">Bills</h2><span class="tot" id="billTot">$0.00</span></div>
+    <div class="body" id="billRows"></div>
+  </section>
+
+  <section class="deed" id="result">
+    <div class="band res"><h2 class="display">Pull These</h2></div>
+    <div class="body" id="resBody"></div>
+  </section>
+</div>
+<div class="bar hide" id="bar"><button type="button" id="barBtn"><span id="barL"></span><span>See ↓</span></button></div>
+
+<script>
+(function(){
+  const COINS = [
+    {id:'p', name:'Pennies',  sym:'1¢',  c:1,  g:2.500, roll:50},
+    {id:'n', name:'Nickels',  sym:'5¢',  c:5,  g:5.000, roll:40},
+    {id:'d', name:'Dimes',    sym:'10¢', c:10, g:2.268, roll:50},
+    {id:'q', name:'Quarters', sym:'25¢', c:25, g:5.670, roll:40},
+  ];
+  const BILLS = [1,5,10,20,50,100].map(v=>({id:'b'+v, v, label:'$'+v, c:v*100}));
+  const UNIT = {g:1, oz:28.349523125};
+  const DEC  = {g:1, oz:2};
+  let unit = 'g';
+  const src = {};            // per coin: 'w' (weight typed) | 'q' (qty typed) | null
+
+  const store = {
+    get(k){ try{ return localStorage.getItem('regclose.'+k); }catch(e){ return null; } },
+    set(k,v){ try{ localStorage.setItem('regclose.'+k, v); }catch(e){} }
+  };
+  const $ = id => document.getElementById(id);
+  const money = c => '$' + (Math.abs(c)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const num = el => { const v = parseFloat(String(el.value).replace(/[^0-9.]/g,'')); return isFinite(v)&&v>0 ? v : 0; };
+  const tareG = () => parseFloat(store.get('tareG')||'') || num($('tare'))*UNIT[unit];
+
+  $('coinRows').innerHTML = COINS.map(k=>`
+    <div class="coin">
+      <div class="who"><div class="chip ${k.id}">${k.sym}</div><b>${k.name}</b><small id="v_${k.id}">$0.00</small></div>
+      <div class="fields">
+        <label class="f"><span>Weight</span><input id="w_${k.id}" data-coin="${k.id}" data-kind="w" type="text" inputmode="decimal" placeholder="g"></label>
+        <label class="f"><span>Rolls</span><input id="r_${k.id}" type="text" inputmode="numeric" placeholder="0"></label>
+        <label class="f"><span>Qty</span><input id="q_${k.id}" data-coin="${k.id}" data-kind="q" type="text" inputmode="numeric" placeholder="0"></label>
+      </div>
+    </div>`).join('');
+  $('billRows').innerHTML = BILLS.map(b=>`
+    <div class="bill">
+      <div class="bleft"><div class="note n${b.v}">${b.label}</div><div class="bv" id="v_${b.id}">$0.00</div></div>
+      <div class="step"><button type="button" data-d="-1" data-for="${b.id}" aria-label="minus">−</button>
+        <input id="c_${b.id}" type="text" inputmode="numeric" placeholder="0" aria-label="${b.label} bills">
+        <button type="button" data-d="1" data-for="${b.id}" aria-label="plus">+</button></div>
+    </div>`).join('');
+
+  // weight <-> qty: whichever was typed last drives the other
+  function sync(k){
+    const w=$('w_'+k.id), q=$('q_'+k.id);
+    if(src[k.id]==='w'){
+      const raw=num(w);
+      q.value = raw>0 ? Math.round(Math.max(0, raw*UNIT[unit]-tareG())/k.g) : '';
+    } else if(src[k.id]==='q'){
+      const n=Math.round(num(q));
+      w.value = n>0 ? +((n*k.g + tareG())/UNIT[unit]).toFixed(DEC[unit]) : '';
+    }
+    w.classList.toggle('auto', src[k.id]==='q' && w.value!=='');
+    q.classList.toggle('auto', src[k.id]==='w' && q.value!=='');
+  }
+
+  document.addEventListener('input', e=>{
+    const t=e.target;
+    if(t.dataset.coin){
+      src[t.dataset.coin] = t.value.trim()==='' ? null : t.dataset.kind;
+      if(!src[t.dataset.coin]){ $('w_'+t.dataset.coin).value=''; $('q_'+t.dataset.coin).value=''; }
+    }
+    if(t.id==='tare'){
+      store.set('tareG', String(num(t)*UNIT[unit]));
+      $('saved').classList.add('show'); clearTimeout(window._sv);
+      window._sv=setTimeout(()=>$('saved').classList.remove('show'),1200);
+    }
+    if(t.id==='target') store.set('target', t.value);
+    calc();
+  });
+  document.addEventListener('focusin', e=>{ if(e.target.tagName==='INPUT') setTimeout(()=>{ try{e.target.select();}catch(_){}} ,0); });
+
+  $('units').addEventListener('click', e=>{
+    const u=e.target.dataset.u; if(!u || u===unit) return;
+    const old=unit; unit=u;
+    [...$('units').children].forEach(b=>b.classList.toggle('on', b.dataset.u===u));
+    COINS.forEach(k=>{
+      const w=$('w_'+k.id); w.placeholder=u;
+      if(src[k.id]==='w' && num(w)>0) w.value = +(num(w)*UNIT[old]/UNIT[u]).toFixed(DEC[u]);
+    });
+    const g=parseFloat(store.get('tareG')||'0');
+    if(g>0) $('tare').value = +(g/UNIT[u]).toFixed(DEC[u]);
+    calc();
+  });
+  $('billRows').addEventListener('click', e=>{
+    const id=e.target.dataset.for; if(!id) return;
+    const inp=$('c_'+id);
+    inp.value = Math.max(0, Math.round(num(inp)) + Number(e.target.dataset.d)) || '';
+    calc();
+  });
+
+  const savedTare=parseFloat(store.get('tareG')||'0');
+  if(savedTare>0) $('tare').value = +savedTare.toFixed(1);
+  const st=store.get('target'); if(st) $('target').value=st;
+
+  // removal: exact sum, fewest small bills ($1s first, then $5s ... up to $50s)
+  function solve(denoms, counts, E){
+    const n=denoms.length, reach=new Array(n+1);
+    reach[n]=new Uint8Array(E+1); reach[n][0]=1;
+    for(let i=n-1;i>=0;i--){
+      const d=denoms[i], cnt=counts[i], prev=reach[i+1];
+      const cur=new Uint8Array(E+1), used=new Uint32Array(E+1);
+      for(let a=0;a<=E;a++){
+        if(prev[a]) cur[a]=1;
+        else if(a>=d && cur[a-d] && used[a-d]<cnt){ cur[a]=1; used[a]=used[a-d]+1; }
+      }
+      reach[i]=cur;
+    }
+    let goal=E; while(goal>0 && !reach[0][goal]) goal--;
+    const take=new Array(n).fill(0); let rem=goal;
+    for(let i=0;i<n;i++){
+      const d=denoms[i], maxK=Math.min(counts[i], Math.floor(rem/d));
+      for(let k=0;k<=maxK;k++){ if(reach[i+1][rem-k*d]){ take[i]=k; rem-=k*d; break; } }
+    }
+    return {take, amount:goal};
+  }
+
+  let lastSummary='', lastState='';
+  function calc(){
+    const target=Math.round(num($('target'))*100);
+    const items=[]; let coinTot=0, billTot=0;
+    COINS.forEach(k=>{
+      sync(k);
+      const count=Math.round(num($('q_'+k.id))) + Math.round(num($('r_'+k.id)))*k.roll;
+      coinTot+=count*k.c;
+      $('v_'+k.id).textContent = count ? `${count.toLocaleString()} · ${money(count*k.c)}` : '$0.00';
+      items.push({label:k.name.toLowerCase(), c:k.c, count, coin:true});
+    });
+    BILLS.forEach(b=>{
+      const count=Math.round(num($('c_'+b.id)));
+      billTot+=count*b.c;
+      const v=$('v_'+b.id); v.textContent=money(count*b.c); v.classList.toggle('has', count>0);
+      items.push({label:b.label, c:b.c, count, coin:false});
+    });
+    $('coinTot').textContent=money(coinTot);
+    $('billTot').textContent=money(billTot);
+    render(items, coinTot+billTot, target);
+  }
+
+  function setBar(cls, text){
+    if(!cls){ $('bar').classList.add('hide'); return; }
+    $('barBtn').className=cls; $('barL').textContent=text; $('bar').classList.remove('hide');
+  }
+  $('barBtn').addEventListener('click', ()=>$('result').scrollIntoView({behavior:'smooth',block:'start'}));
+  try{ new IntersectionObserver(es=>{ $('bar').style.visibility = es[0].isIntersecting ? 'hidden' : ''; },{threshold:.25}).observe($('result')); }catch(e){}
+
+  const stats=(total,removed)=>`<div class="stats">
+      <div class="stat"><span>Counted</span><b>${money(total)}</b></div>
+      <div class="stat hl"><span>Pull out</span><b>${money(removed)}</b></div>
+      <div class="stat"><span>Drawer</span><b>${money(total-removed)}</b></div></div>`;
+  const status=(icon,title,sub)=>`<div class="status"><div class="badge">${icon}</div><div><h3>${title}</h3>${sub?`<p>${sub}</p>`:''}</div></div>`;
+  const actions=`<div class="actions"><button class="btn primary" id="copyBtn" type="button">Copy</button><button class="btn danger" id="clearBtn" type="button">Clear</button></div>`;
+
+  function render(items, total, target){
+    const el=$('resBody'); el.className='body';
+    const E=total-target;
+    if(total===0){ setBar(''); el.innerHTML=`<div class="empty">Enter the count to see what to pull 🎲</div>`; lastSummary=''; lastState=''; return; }
+    if(E<0){
+      el.classList.add('short');
+      el.innerHTML=status('!','Short '+money(-E),'Recount, then tell a manager.')+stats(total,0)+actions;
+      lastSummary=`Drawer ${money(total)} — SHORT ${money(-E)}. Nothing pulled.`;
+      lastState='short'; setBar('short','Short '+money(-E)); return;
+    }
+    if(E<100){
+      el.classList.add('ok');
+      el.innerHTML=status('★','Jackpot!','Already in range. Nothing to pull.')+stats(total,0)+actions;
+      lastSummary=`Drawer ${money(total)} — in range, nothing pulled.`;
+      celebrate('ok0'); setBar('ok','Balanced ★'); return;
+    }
+    if(E>2000000){
+      el.classList.add('warn');
+      el.innerHTML=status('?','Too high','Check the weights and unit.'); lastSummary=''; lastState=''; setBar('warn','Check entries'); return;
+    }
+    // bills only, whole dollars: drawer ends between target and target + $0.99
+    const bills=items.filter(i=>!i.coin);
+    const D=Math.floor(E/100);
+    const {take, amount:dollars}=solve(bills.map(i=>i.c/100), bills.map(i=>i.count), D);
+    const amount=dollars*100;
+    const over=D-dollars;
+    const pulls=bills.map((it,i)=>({...it, n:take[i]})).filter(x=>x.n>0).reverse();
+    const li=pulls.map((p,i)=>`<li style="animation-delay:${i*70}ms"><span class="x">${p.n}×</span>${p.label}<span class="amt">${money(p.n*p.c)}</span></li>`).join('');
+    const left=total-amount;
+    if(over>0){
+      el.classList.add('warn');
+      el.innerHTML=status('≈','Almost', `Drawer will be ${money(left)} — swap a bill for smaller ones from the safe.`)+`<ul class="pull">${li}</ul>`+stats(total,amount)+actions;
+    } else {
+      el.classList.add('ok');
+      el.innerHTML=status('✓','Balanced!', `Drawer lands on ${money(left)}.`)+`<ul class="pull">${li}</ul>`+stats(total,amount)+actions;
+      celebrate('ok:'+pulls.map(p=>p.n+p.label).join());
+    }
+    setBar(over>0?'warn':'ok','Pull '+money(amount));
+    lastSummary=`Register count — ${new Date().toLocaleString()}\nCounted: ${money(total)}\nPulled: ${money(amount)}\n`+
+      pulls.map(p=>`  ${p.n} x ${p.label}`).join('\n')+`\nDrawer: ${money(total-amount)}`;
+  }
+
+  let confT;
+  function celebrate(key){
+    if(key===lastState) return;
+    lastState=key; clearTimeout(confT);
+    confT=setTimeout(()=>{
+      const box=document.createElement('div'); box.className='confetti';
+      const cols=['#d6332b','#2d6fd2','#1d9a5b','#f5c518','#f08a24','#7a45c9'];
+      for(let i=0;i<30;i++){
+        const p=document.createElement('i');
+        p.style.left=Math.random()*100+'%'; p.style.background=cols[i%cols.length];
+        p.style.animationDelay=(Math.random()*.4)+'s';
+        box.appendChild(p);
+      }
+      document.body.appendChild(box); setTimeout(()=>box.remove(),2200);
+    },800);
+  }
+
+  let clearArmed=false, clearTimer;
+  $('resBody').addEventListener('click', async e=>{
+    const t=e.target;
+    if(t.id==='copyBtn'){
+      try{ await navigator.clipboard.writeText(lastSummary); t.textContent='Copied ✓'; }
+      catch(err){ t.textContent='Blocked'; }
+      setTimeout(()=>{ t.textContent='Copy'; },1600);
+    }
+    if(t.id==='clearBtn'){
+      if(!clearArmed){ clearArmed=true; t.textContent='Sure?';
+        clearTimer=setTimeout(()=>{clearArmed=false; t.textContent='Clear';},2500); return; }
+      clearTimeout(clearTimer); clearArmed=false;
+      document.querySelectorAll('#coinRows input, #billRows input').forEach(i=>{ i.value=''; i.classList.remove('auto'); });
+      COINS.forEach(k=>src[k.id]=null);
+      calc(); window.scrollTo({top:0,behavior:'smooth'});
+    }
+  });
+
+  calc();
+})();
+</script>
+</body>
+</html>

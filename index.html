@@ -116,6 +116,9 @@
   .stat b{font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;font-size:18px;font-variant-numeric:tabular-nums}
   .stat.hl{background:var(--yellow)}
   .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+  .actions.one{grid-template-columns:1fr}
+  .clearall{display:block;width:100%;min-height:72px;font-size:22px;background:#fff;color:var(--red);box-shadow:var(--sh)}
+  .clearall.armed{background:var(--red);color:#fff}
   .btn{font:inherit;font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;text-transform:uppercase;font-size:19px;min-height:64px;border:var(--bd);border-radius:14px;
     cursor:pointer;box-shadow:var(--sh-sm);background:var(--paper);color:var(--ink);touch-action:manipulation}
   .btn.primary{background:var(--blue);color:#fff}
@@ -174,6 +177,8 @@
     <div class="band res"><h2 class="display">Pull These</h2></div>
     <div class="body" id="resBody"></div>
   </section>
+
+  <button class="btn clearall" id="clearAll" type="button">✕ Clear All</button>
 </div>
 <div class="bar hide" id="bar"><button type="button" id="barBtn"><span id="barL"></span><span>See ↓</span></button></div>
 
@@ -326,7 +331,7 @@
       <div class="stat hl"><span>Pull out</span><b>${money(removed)}</b></div>
       <div class="stat"><span>Drawer</span><b>${money(total-removed)}</b></div></div>`;
   const status=(icon,title,sub)=>`<div class="status"><div class="badge">${icon}</div><div><h3>${title}</h3>${sub?`<p>${sub}</p>`:''}</div></div>`;
-  const actions=`<div class="actions"><button class="btn primary" id="copyBtn" type="button">Copy</button><button class="btn danger" id="clearBtn" type="button">Clear</button></div>`;
+  const actions=`<div class="actions one"><button class="btn primary" id="copyBtn" type="button">Copy Summary</button></div>`;
 
   function render(items, total, target){
     const el=$('resBody'); el.className='body';
@@ -393,16 +398,17 @@
     if(t.id==='copyBtn'){
       try{ await navigator.clipboard.writeText(lastSummary); t.textContent='Copied ✓'; }
       catch(err){ t.textContent='Blocked'; }
-      setTimeout(()=>{ t.textContent='Copy'; },1600);
+      setTimeout(()=>{ t.textContent='Copy Summary'; },1600);
     }
-    if(t.id==='clearBtn'){
-      if(!clearArmed){ clearArmed=true; t.textContent='Sure?';
-        clearTimer=setTimeout(()=>{clearArmed=false; t.textContent='Clear';},2500); return; }
-      clearTimeout(clearTimer); clearArmed=false;
-      document.querySelectorAll('#coinRows input, #billRows input').forEach(i=>{ i.value=''; i.classList.remove('auto'); });
-      COINS.forEach(k=>src[k.id]=null);
-      calc(); window.scrollTo({top:0,behavior:'smooth'});
-    }
+  });
+  const clearBtn=$('clearAll');
+  clearBtn.addEventListener('click', ()=>{
+    if(!clearArmed){ clearArmed=true; clearBtn.classList.add('armed'); clearBtn.textContent='Tap again to clear everything';
+      clearTimer=setTimeout(()=>{clearArmed=false; clearBtn.classList.remove('armed'); clearBtn.textContent='✕ Clear All';},3000); return; }
+    clearTimeout(clearTimer); clearArmed=false; clearBtn.classList.remove('armed'); clearBtn.textContent='✕ Clear All';
+    document.querySelectorAll('#coinRows input, #billRows input').forEach(i=>{ i.value=''; i.classList.remove('auto'); });
+    COINS.forEach(k=>src[k.id]=null);
+    calc(); window.scrollTo({top:0,behavior:'smooth'});
   });
 
   calc();
